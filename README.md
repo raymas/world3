@@ -10,9 +10,11 @@ This is a fork of [eighties-cities/world3](https://github.com/eighties-cities/wo
 
 ## Results
 
-Lastest result can be visualized by reaching [html page](https://raymas.github.io/world3/html/).
+Lastest result can be visualized by reaching [viewer page](https://raymas.github.io/world3/viewer/).
 
-![lastest_project](html/projection.png)
+<a href="https://raymas.github.io/world3/viewer/" target="_blank">
+   <img src="viewer/projection.png" />
+</a>
 
 ## Display
 > sbt

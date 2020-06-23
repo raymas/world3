@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="world3 simulator viewer">
+    <meta name="author" content="raymas">
+    <title>World3 viewer</title>
+
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+        integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+
+    <!-- Custom styles for this template -->
+    <style>
+        .jumbotron {
+            background-color: white;
+        }
+    </style>
+
+</head>
+
+<body>
+
+
+    <header>
+        <div class="collapse bg-dark" id="navbarHeader">
+            <div class="container">
+                <div class="row">
+                    <div class="col-sm-8 col-md-7 py-4">
+                        <h4 class="text-white">About</h4>
+                        <p class="text-muted">This is a scala implementation of the world3 model.
+                            Originaly developped by <a href="https://github.com/eighties-cities/world3"
+                                target='_blank'>eighties-cities</a>
+                            forked by <a href="https://github.com/raymas/" target="_blank">raymas</a> and <i>La
+                                Fondation</i></p>
+                    </div>
+                    <div class="col-sm-4 offset-md-1 py-4">
+                        <h4 class="text-white">Contribute</h4>
+                        <ul class="list-unstyled">
+                            <li><a href="https://github.com/raymas/world3" target="_blank" class="text-white">Github</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="navbar navbar-dark bg-dark box-shadow">
+            <div class="container d-flex justify-content-between">
+                <a href="https://raymas.github.io/world3/viewer" class="navbar-brand d-flex align-items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="mr-2">
+                        <path
+                            d="M17.9,17.39C17.64,16.59 16.89,16 16,16H15V13A1,1 0 0,0 14,12H8V10H10A1,1 0 0,0 11,9V7H13A2,2 0 0,0 15,5V4.59C17.93,5.77 20,8.64 20,12C20,14.08 19.2,15.97 17.9,17.39M11,19.93C7.05,19.44 4,16.08 4,12C4,11.38 4.08,10.78 4.21,10.21L9,15V16A2,2 0 0,0 11,18M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z">
+                        </path>
+                    </svg>
+                    <strong>world3</strong>
+                </a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarHeader"
+                    aria-controls="navbarHeader" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main role="main">
+
+        <section class="jumbotron text-center">
+            <div id="results" style="width:auto; height:100vh"></div>
+        </section>
+
+        <section class="jumbotron text-center">
+            <div id="dependencies" style="width:auto; height:100vh"></div>
+        </section>
+
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/1.0.11/jquery.csv.min.js"></script>
+
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+        integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+        crossorigin="anonymous"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/4.8.0/echarts.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/4.8.0/extension/dataTool.js"></script>
+
+    <script>
+
+        var resultsChart = echarts.init(document.getElementById('results'), null, { renderer: 'results' })
+        var dependenciesChart = echarts.init(document.getElementById('dependencies'), null, { renderer: 'canvas' })
+
+        $.get('results.csv').done(function (data) {
+            var parsedCSV = $.csv.toObjects(data)
+
+            const xvalue = 'step'
+            const x = parsedCSV.map(x => (x[xvalue]))
+
+            const series = []
+            Object.keys(parsedCSV[0]).forEach((key) => {
+                if (key !== xvalue) {
+                    series.push({
+                        name: key,
+                        data: parsedCSV.map(y => y[key]),
+                        type: 'line',
+                        // stack: 'Step values'
+                    })
+                }
+            })
+
+            resultsChart.setOption({
+                title: {
+                    text: 'World3 - Results'
+                },
+                tooltip: {
+                    trigger: 'axis'
+                },
+                toolbox: {
+                    feature: {
+                        saveAsImage: {
+                            title: 'Save as image'
+                        }
+                    }
+                },
+                legend: {
+                    data: series.map(x => x.name)
+                },
+                xAxis: {
+                    type: 'category',
+                    data: x
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: series
+            })
+        })
+
+        $.get('model.gexf', function (xml) {
+            dependenciesChart.hideLoading()
+
+            var graph = echarts.dataTool.gexf.parse(xml)
+            var categories = []
+            graph.nodes.forEach(function (node) {
+                node.itemStyle = null
+                node.value = node.symbolSize
+                node.symbolSize = (node.symbolSize + 1) * 2
+                node.x = Math.random() * 100000,
+                    node.y = Math.random() * 100000
+                node.label = {
+                    show: node.value >= 0
+                }
+                node.category = node.attributes.modularity_class
+                if (categories.indexOf(node.category) < 0) categories.push({ name: node.category })
+            })
+
+            dependenciesChart.setOption({
+                title: {
+                    text: 'World3 - Dependencies'
+                },
+                tooltip: {},
+                legend: [{
+                    // selectedMode: 'single',
+                    data: categories.map(function (a) {
+                        return a.name
+                    })
+                }],
+                animationDuration: 1500,
+                animationEasingUpdate: 'quinticInOut',
+                series: [
+                    {
+                        name: 'World3',
+                        type: 'graph',
+                        layout: 'circular',
+                        circular: {
+                            rotateLabel: true
+                        },
+                        data: graph.nodes,
+                        links: graph.links,
+                        categories: categories,
+                        roam: true,
+                        focusNodeAdjacency: true,
+                        itemStyle: {
+                            borderColor: '#fff',
+                            borderWidth: 1,
+                            shadowBlur: 10,
+                            shadowColor: 'rgba(0, 0, 0, 0.3)'
+                        },
+                        label: {
+                            position: 'right',
+                            formatter: '{b}'
+                        },
+                        lineStyle: {
+                            color: 'source',
+                            curveness: 0.3
+                        },
+                        emphasis: {
+                            lineStyle: {
+                                width: 10
+                            }
+                        }
+                    }
+                ]
+            })
+        }, 'xml')
+
+        window.onresize = function () {
+            dependenciesChart.resize()
+            resultsChart.resize()
+        }
+
+    </script>
+</body>
+
+</html>
