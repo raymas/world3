@@ -20,11 +20,12 @@ object Box {
     def update(dt: Double)
     def enabled_=(b: Boolean)
     val dependencies: Vector[String]
+    val category: String
   }
 
   object Level {
-    def apply(qName: String, qNumber: Equation, initVal: Double, updateFn: () => Option[Double], units: String = "dimensionless", dependencies: Vector[String] = Vector()) =
-      new Level(qName, qNumber, initVal, updateFn, units, dependencies)
+    def apply(qName: String, qNumber: Equation, initVal: Double, updateFn: () => Option[Double], units: String = "dimensionless", category: String = "", dependencies: Vector[String] = Vector()) =
+      new Level(qName, qNumber, initVal, updateFn, units, category, dependencies)
   }
 
   class Level(
@@ -33,6 +34,7 @@ object Box {
     val initVal: Double,
     val updateFn: () => Option[Double],
     val units: String,
+    val category: String,
     val dependencies: Vector[String]) extends All {
 
     val qType = "Level"
@@ -62,8 +64,9 @@ object Box {
                qNumber: Int,
                updateFn: () => Option[Double],
                units: String = "dimensionless",
+               category: String = "",
                dependencies: Vector[String] = Vector()) =
-      new Rate(qName, qNumber, units, updateFn, dependencies)
+      new Rate(qName, qNumber, units, updateFn, category, dependencies)
 
   }
 
@@ -72,6 +75,7 @@ object Box {
               val qNumber: Int,
               val units: String,
               val updateFn: () => Option[Double],
+              val category: String,
               val dependencies: Vector[String]) extends All {
 
     val qType = "Rate"
@@ -95,8 +99,8 @@ object Box {
   }
 
   object Aux {
-    def apply(qName: String, qNumber: Equation, updateFn: () => Option[Double], units: String = "dimensionless", dependencies: Vector[String] = Vector()) =
-      new Aux(qName, qNumber, updateFn, units, dependencies)
+    def apply(qName: String, qNumber: Equation, updateFn: () => Option[Double], units: String = "dimensionless", category: String = "", dependencies: Vector[String] = Vector()) =
+      new Aux(qName, qNumber, updateFn, units, category, dependencies)
   }
 
   class Aux(
@@ -104,6 +108,7 @@ object Box {
              val qNumber: Equation,
              val updateFn: () => Option[Double],
              val units: String,
+             val category: String,
              val dependencies: Vector[String]) extends All {
     val qType = "Aux"
     var j: Option[Double] = None
@@ -133,8 +138,9 @@ object Box {
                initFn: () => All,
                initVal: Option[Double] = None,
                units: String = "dimensionless",
+               category: String = "",
                dependencies: Vector[String] = Vector()) =
-      new Smooth(qName, qNumber, initFn, initVal, units, delay, dependencies)
+      new Smooth(qName, qNumber, initFn, initVal, units, delay, category, dependencies)
 
   }
 
@@ -145,6 +151,7 @@ object Box {
                 val initVal: Option[Double],
                 val units: String,
                 val delay: Double,
+                val category: String,
                 val dependencies: Vector[String]) extends All {
     val qType = "Smooth"
     var j: Option[Double] = None
@@ -185,8 +192,8 @@ object Box {
   object Delay3 {
     case class JK(j: Option[Double], k: Option[Double])
 
-    def apply(qName: String, qNumber: Equation, initFn: () => All, delay: Double, units: String = "dimensionless", dependencies: Vector[String] = Vector()) =
-      new Delay3(qName, qNumber, initFn, units, delay, dependencies)
+    def apply(qName: String, qNumber: Equation, initFn: () => All, delay: Double, units: String = "dimensionless", category: String = "", dependencies: Vector[String] = Vector()) =
+      new Delay3(qName, qNumber, initFn, units, delay, category, dependencies)
   }
 
   class Delay3(
@@ -195,6 +202,7 @@ object Box {
                 val initFn: () => All,
                 val units: String,
                 val delay: Double,
+                val category: String,
                 val dependencies: Vector[String]) extends All {
     val qType = "Delay3"
     var j: Option[Double] = None
@@ -265,8 +273,9 @@ object Box {
 //               iDelta: Double,
                updateFn: () => Option[Double],
                units: String = "dimensionless",
+               category: String = "",
                dependencies: Vector[String] = Vector()) =
-      new Table(qName, qNumber, data, /*iMin, iMax, iDelta, */updateFn, units, dependencies)
+      new Table(qName, qNumber, data, /*iMin, iMax, iDelta, */updateFn, units, category, dependencies)
 
 
   }
@@ -280,6 +289,7 @@ object Box {
 //               val iDelta: Double,
                val updateFn: () => Option[Double],
                val units: String,
+               val category: String,
                val dependencies: Vector[String]) extends All {
 
     var j: Option[Double] = None
