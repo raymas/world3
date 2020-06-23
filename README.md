@@ -10,7 +10,7 @@ This is a fork of [eighties-cities/world3](https://github.com/eighties-cities/wo
 
 ## Results
 
-Lastest result can be visualized by reaching [html page](html/).
+Lastest result can be visualized by reaching [html page](https://raymas.github.io/world3/html/).
 
 ![lastest_project](html/projection.png)
 
