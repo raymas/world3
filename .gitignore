@@ -12,3 +12,6 @@ pom.xml
 *.DS_Store
 tags
 project/
+model/*.dot
+model/*.gexf
+model/*.csv
