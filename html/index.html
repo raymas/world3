@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>World3 viewer</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    
+    <div id="main" style="width:100vw; height:100vh;"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/4.8.0/echarts.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/4.8.0/extension/dataTool.js"></script>
+    <script>
+    var myChart = echarts.init(document.getElementById('main'), null, {renderer: 'canvas'});
+    $.get('model.gexf', function (xml) {
+        myChart.hideLoading();
+
+        var graph = echarts.dataTool.gexf.parse(xml);
+        var categories = [];
+        graph.nodes.forEach(function (node) {
+            node.itemStyle = null;
+            node.value = node.symbolSize;
+            node.symbolSize = (node.symbolSize + 1) * 2;
+            node.x = Math.random() * 100000,
+            node.y = Math.random() * 100000
+            node.label = {
+                show: node.value >= 0
+            };
+            node.category = node.attributes.modularity_class;
+            if (categories.indexOf(node.category) < 0) categories.push({ name: node.category })
+        });
+
+        console.log(graph)
+
+        option = {
+            title: {
+                text: 'World3',
+                subtext: 'Default layout',
+                top: 'bottom',
+                left: 'right'
+            },
+            tooltip: {},
+            legend: [{
+                // selectedMode: 'single',
+                data: categories.map(function (a) {
+                    return a.name;
+                })
+            }],
+            animationDuration: 1500,
+            animationEasingUpdate: 'quinticInOut',
+            series : [
+                {
+                    name: 'World3',
+                    type: 'graph',
+                    layout: 'circular',
+                    circular: {
+                        rotateLabel: true
+                    },
+                    data: graph.nodes,
+                    links: graph.links,
+                    categories: categories,
+                    roam: true,
+                    focusNodeAdjacency: true,
+                    itemStyle: {
+                        borderColor: '#fff',
+                        borderWidth: 1,
+                        shadowBlur: 10,
+                        shadowColor: 'rgba(0, 0, 0, 0.3)'
+                    },
+                    label: {
+                        position: 'right',
+                        formatter: '{b}'
+                    },
+                    lineStyle: {
+                        color: 'source',
+                        curveness: 0.3
+                    },
+                    emphasis: {
+                        lineStyle: {
+                            width: 10
+                        }
+                    }
+                }
+            ]
+        };
+
+        myChart.setOption(option);
+    }, 'xml');
+    </script>
+  </body>
+</html>

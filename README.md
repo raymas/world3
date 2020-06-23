@@ -8,6 +8,11 @@ This is a fork of [eighties-cities/world3](https://github.com/eighties-cities/wo
 * **html** : html page to be rendered by github pages
 * **model** : the actual model
 
+## Results
+
+Lastest result can be visualized by reaching [html page](html/).
+
+![lastest_project](html/projection.png)
 
 ## Display
 > sbt
