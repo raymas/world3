@@ -39,7 +39,8 @@
                     <div class="col-sm-4 offset-md-1 py-4">
                         <h4 class="text-white">Contribute</h4>
                         <ul class="list-unstyled">
-                            <li><a href="https://github.com/raymas/world3" target="_blank" class="text-white">Github</a></li>
+                            <li><a href="https://github.com/raymas/world3" target="_blank" class="text-white">Github</a>
+                            </li>
                         </ul>
                     </div>
                 </div>
@@ -68,10 +69,16 @@
     <main role="main">
 
         <section class="jumbotron text-center">
+            <div class="container">
+                <h2>World3 results</h2>
+            </div>
             <div id="results" style="width:auto; height:100vh"></div>
         </section>
 
         <section class="jumbotron text-center">
+            <div class="container">
+                <h2>World3 dependencies</h2>
+            </div>
             <div id="dependencies" style="width:auto; height:100vh"></div>
         </section>
 
@@ -104,11 +111,19 @@
                     series.push({
                         name: key,
                         data: parsedCSV.map(y => y[key]),
-                        type: 'line',
-                        // stack: 'Step values'
+                        type: 'line'
                     })
                 }
             })
+
+            series[0].markArea = {
+                data: [[{
+                    name: 'Actual year',
+                    xAxis: String(new Date().getFullYear()) + '.0'
+                }, {
+                    xAxis: String(new Date().getFullYear() + 1) + '.0'
+                }]]
+            }
 
             resultsChart.setOption({
                 title: {
