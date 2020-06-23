@@ -32,7 +32,7 @@ object Run extends App {
   }
 
   def check(result: Vector[StepValues]): Unit = {
-    assert(File("/tmp/results.csv").contentAsString == csv(result))
+    assert(File("results.csv").contentAsString == csv(result))
   }
 
   val s1 = Constants()
@@ -42,7 +42,7 @@ object Run extends App {
   val w3 = new World3(s1)
   val result = w3.run()
 
-  val writer = File("/tmp/results.csv").newFileWriter()
+  val writer = File("results.csv").newFileWriter()
   writer.write(csv(result))
   writer.close()
   //  check(result)
