@@ -6,33 +6,63 @@ import Box._
 import monocle.macros._
 import scala.collection.mutable.ListBuffer
 import monocle._
+import scala.util.Try
 
 object Run extends App {
 
   def scale(x: Double, xMin: Double = 0.0, xMax: Double): Double = (x - xMin) / (xMax - xMin)
 
-  def csv(result: Vector[StepValues]):String = {
-    def header = "step,population,nonrenewableResourceFractionRemaining,serviceOutput," +
-      "foodPerCapita,industrialOutputPerCapita,indexOfPersistentPollution,lifeExpectancy," +
-      "crudeBirthRate,crudeDeathRate,arableLand,landYield"
-    Vector(header).++(result.map {
-      r => s"${r.step}," +
-        s"${scale(r.population,xMax=1.6e10)}," +
-        s"${scale(r.nonrenewableResourceFractionRemaining,xMax=1.0)}," +
-        s"${scale(r.foodPerCapita,xMax=1000)}," +
-        s"${scale(r.industrialOutputPerCapita,xMax=500)}," +
-        s"${scale(r.serviceOutput,xMax=1.0e13)}," +
-        s"${scale(r.indexOfPersistentPollution,xMax=32)}," +
-        s"${scale(r.lifeExpectancy,xMax=80)}," +
-        s"${scale(r.crudeBirthRate,xMax=50)}," +
-        s"${scale(r.crudeDeathRate,xMax=50)}," +
-        s"${scale(r.arableLand,xMax=3.0e9)}," +
-        s"${scale(r.landYield,xMax=3000)}"
-    }).mkString("\n")
+  def scaledCSV(result: Vector[All], step: ListBuffer[Double]):String = {
+    def selectedValues = Map(
+        "population" -> 1.6e10,
+        "nonrenewableResourceFractionRemaining" -> 1.0,
+        "serviceOutput" -> 1.0e13,
+        "foodPerCapita" -> 1000.0,
+        "industrialOutputPerCapita" -> 500.0,
+        "indexOfPersistentPollution" -> 32.0,
+        "lifeExpectancy" -> 80.0,
+        "crudeBirthRate" -> 50.0,
+        "crudeDeathRate" -> 50.0,
+        "arableLand" -> 3.0e9,
+        "landYield" -> 3000.0
+      )
+
+    val selectedResult = result.filter(r => selectedValues.keys.toArray.contains(r.qName))
+
+    def header = "step," + selectedResult.map { 
+      r=> s"${r.qName}"
+    }.mkString(",")
+
+    val out = ListBuffer[String]()
+    for (i <- 0 to step.length - 1) {
+      out += step(i) + "," + selectedResult.map { 
+        r => scale(r.values(i), xMax=selectedValues(r.qName).asInstanceOf[Double])
+      }.mkString(",")
+    }
+    Vector(header).++(out).mkString("\n")
+  }
+
+  def csv(result: Vector[All], step: ListBuffer[Double]):String = {
+    // Producing header
+    def header = "step," + result.map { 
+      r=> s"${r.qName}"
+    }.mkString(",")    
+
+    val out = ListBuffer[String]()
+    for (i <- 0 to step.length - 1) {
+      out += step(i) + "," + result.map { 
+        r => r.values(i)
+      }.mkString(",")
+    }
+    Vector(header).++(out).mkString("\n")
+  }
+
+  def adjustResultsSize(result: Vector[All], splice: Int) {
+    result.foreach(r => r.values.remove(0, splice))
   }
 
   def check(result: Vector[StepValues]): Unit = {
-    assert(File("results.csv").contentAsString == csv(result))
+    // assert(File("results.csv").contentAsString == scaledCSV(result))
   }
 
   val s1 = Constants()
@@ -40,11 +70,19 @@ object Run extends App {
   //val s3 = Constants(nonrenewableResourcesInitialK = 2.0e12, persistentpollutiontech)
 
   val w3 = new World3(s1)
-  val result = w3.run()
+  val results = w3.run()
 
-  val writer = File("results.csv").newFileWriter()
-  writer.write(csv(result))
-  writer.close()
+  adjustResultsSize(results, w3.tickInitNb)
+
+  scaledCSV(results, w3.time)
+
+  // val scaledWriter = File("scaledResults.csv").newFileWriter()
+  // scaledWriter.write(scaledCSV(result))
+  // scaledWriter.close()
+
+  val allWriter = File("allResults.csv").newFileWriter()
+  allWriter.write(csv(results, w3.time))
+  allWriter.close()
   //  check(result)
   /*
   val graphWriter = File("graph.dot").newFileWriter()
@@ -257,9 +295,12 @@ class World3(constants: Constants) {
 
   var t: Double = 1900.0
   val dt: Double = 1.0
+  val time = ListBuffer[Double]()
   val policyYear: Double = 1975.0                 // eqn 150.1
+  val tickInitNb: Int = 100
 
   def resetModel() =  {
+    val time = ListBuffer[Double]()
     t = startTime
     all.foreach(_.reset())
   }
@@ -296,7 +337,7 @@ class World3(constants: Constants) {
     resetModel()
     initModel()
 
-    for (_ <- 1 to 100) {
+    for (_ <- 1 to tickInitNb) {
       warmupAuxen()
       warmupRates()
       tock()
@@ -309,14 +350,13 @@ class World3(constants: Constants) {
   }
 
   def exec() = {
-    val result = ListBuffer[StepValues]()
-
     while (t <= stopTime) {
-      result += StepValues(t, population.k.get, nonrenewableResourceFractionRemaining.k.get, foodPerCapita.k.get, industrialOutputPerCapita.k.get, serviceOutput.k.get, indexOfPersistentPollution.k.get, lifeExpectancy.k.get, crudeBirthRate.k.get, crudeDeathRate.k.get, arableLand.k.get, landYield.k.get)
+      time += t
       timeStep()
     }
+    val results = all
 
-    result.toVector
+    results.toVector
   }
 
   def run() = {

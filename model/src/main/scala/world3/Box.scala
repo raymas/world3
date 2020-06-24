@@ -21,6 +21,7 @@ object Box {
     def enabled_=(b: Boolean)
     val dependencies: Vector[String]
     val category: String
+    val values: ListBuffer[Double]
   }
 
   object Level {
@@ -41,6 +42,7 @@ object Box {
     var j: Option[Double] = Some(initVal)
     var k: Option[Double] = Some(initVal)
     var enabled = true
+    val values = ListBuffer[Double]()
 
     def reset() = {
       k = Some(initVal)
@@ -54,7 +56,10 @@ object Box {
       k.get
     }
 
-    def tick() = { j = k }
+    def tick() = { 
+      j = k
+      if (!k.isEmpty) values += k.get else values += 0.0
+    }
   }
 
   object Rate {
@@ -82,6 +87,7 @@ object Box {
     var j: Option[Double] = None
     var k: Option[Double] = None
     var enabled = true
+    val values = ListBuffer[Double]()
 
     def reset() = {
       j = None
@@ -95,7 +101,10 @@ object Box {
       k.get
     }
 
-    def tick() = { j = k }
+    def tick() = { 
+      j = k
+      if (!k.isEmpty) values += k.get else values += 0.0
+    }
   }
 
   object Aux {
@@ -114,6 +123,7 @@ object Box {
     var j: Option[Double] = None
     var k: Option[Double] = None
     var enabled = true
+    val values = ListBuffer[Double]()
 
     def reset() = {
       j = None
@@ -127,7 +137,10 @@ object Box {
       k.get
     }
 
-    def tick() = { j = k }
+    def tick() = { 
+      j = k
+      if (!k.isEmpty) values += k.get else values += 0.0
+    }
   }
 
   object Smooth {
@@ -158,6 +171,7 @@ object Box {
     var k: Option[Double] = None
     var firstCall = true
     var enabled = true
+    val values = ListBuffer[Double]()
 
     def init()  = {
       j = initFn().k orElse initVal
@@ -184,7 +198,10 @@ object Box {
     }
 
     def warmup(dt: Double): Unit = init()
-    def tick() = { j = k }
+    def tick() = { 
+      j = k
+      if (!k.isEmpty) values += k.get else values += 0.0
+    }
   }
 
   //  // constructor for Delay3 objects
@@ -209,6 +226,7 @@ object Box {
     var k: Option[Double] = None
     var firstCall = true
     var enabled = true
+    val values = ListBuffer[Double]()
 
     val delayPerStage = delay / 3
 
@@ -259,7 +277,10 @@ object Box {
     }
 
     def warmup(dt: Double) = init()
-    def tick() = { j = k }
+    def tick() = {
+      j = k
+      if (!k.isEmpty) values += k.get else values += 0.0
+    }
   }
 
   object Table {
@@ -295,6 +316,7 @@ object Box {
     var j: Option[Double] = None
     var k: Option[Double] = None
     var enabled = true
+    val values = ListBuffer[Double]()
 
     def interpolate(lower: Int, upper: Int, fraction: Double) = {
       val lowerVal = data(lower)._2
@@ -338,6 +360,9 @@ object Box {
 
     def warmup(dt: Double) = update(dt)
 
-    def tick() = { j = k }
+    def tick() = {
+      j = k
+      if (!k.isEmpty) values += k.get else values += 0.0
+    }
   }
 }
