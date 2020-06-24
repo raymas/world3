@@ -22,8 +22,6 @@
 </head>
 
 <body>
-
-
     <header>
         <div class="collapse bg-dark" id="navbarHeader">
             <div class="container">
@@ -77,6 +75,13 @@
 
         <section class="jumbotron text-center">
             <div class="container">
+                <h2>World3 variables</h2>
+            </div>
+            <div id="variables" style="width:auto; height:100vh"></div>
+        </section>
+
+        <section class="jumbotron text-center">
+            <div class="container">
                 <h2>World3 dependencies</h2>
             </div>
             <div id="dependencies" style="width:auto; height:100vh"></div>
@@ -96,16 +101,17 @@
 
     <script>
 
-        var resultsChart = echarts.init(document.getElementById('results'), null, { renderer: 'results' })
+        var resultsChart = echarts.init(document.getElementById('results'), null, { renderer: 'canvas' })
+        var variablesChart = echarts.init(document.getElementById('variables'), null, { renderer: 'canvas' })
         var dependenciesChart = echarts.init(document.getElementById('dependencies'), null, { renderer: 'canvas' })
 
-        $.get('results.csv').done(function (data) {
+        $.get('scaledResults.csv').done(function (data) {
             var parsedCSV = $.csv.toObjects(data)
 
             const xvalue = 'step'
             const x = parsedCSV.map(x => (x[xvalue]))
 
-            const series = []
+            var series = []
             Object.keys(parsedCSV[0]).forEach((key) => {
                 if (key !== xvalue) {
                     series.push({
@@ -127,7 +133,7 @@
 
             resultsChart.setOption({
                 title: {
-                    text: 'World3 - Results'
+                    // text: 'World3 - Results'
                 },
                 tooltip: {
                     trigger: 'axis'
@@ -136,6 +142,17 @@
                     feature: {
                         saveAsImage: {
                             title: 'Save as image'
+                        },
+                        dataView: {
+                            title: 'View Data',
+                            readOnly: true,
+                            lang: ['Data view', 'Close', 'Submit']
+                        },
+                        dataZoom: {
+                            title: {
+                                zoom: 'Area zooming',
+                                back: 'Restore view'
+                            }
                         }
                     }
                 },
@@ -151,6 +168,99 @@
                 },
                 series: series
             })
+        })
+
+        $.get('allResults.csv', function (data) {
+            var parsedCSV = $.csv.toObjects(data)
+
+            const xvalue = 'step'
+            const x = parsedCSV.map(x => (x[xvalue]))
+
+            var allSeries = []
+            Object.keys(parsedCSV[0]).forEach((key) => {
+                if (key !== xvalue) {
+                    allSeries.push({
+                        name: key,
+                        data: parsedCSV.map(y => y[key]),
+                        type: 'line'
+                    })
+                }
+            })
+
+            console.log(allSeries)
+
+            var grids = [];
+            var xAxes = [];
+            var yAxes = [];
+            var series = [];
+            var titles = [];
+            var count = 0;
+            echarts.util.each(allSeries, function (serie) {
+                var data = [];
+                for (var i = 0; i < x.length; i++) {
+                    data.push([parseFloat(x[i]), parseFloat(serie.data[i])])
+                }
+                grids.push({
+                    show: true,
+                    borderWidth: 0,
+                    backgroundColor: '#fff',
+                    shadowColor: 'rgba(0, 0, 0, 0.3)',
+                    shadowBlur: 2,
+                    tooltip: {
+                        trigger: 'item'
+                    }
+                });
+                xAxes.push({
+                    type: 'value',
+                    show: false,
+                    min: x[0],
+                    max: x[x.length - 1],
+                    gridIndex: count
+                });
+                yAxes.push({
+                    type: 'value',
+                    show: false,
+                    min: Math.min(...serie.data),
+                    max: Math.max(...serie.data) * 1.2,
+                    gridIndex: count
+                });
+                series.push({
+                    name: serie.name,
+                    type: 'line',
+                    xAxisIndex: count,
+                    yAxisIndex: count,
+                    data: data,
+                    showSymbol: false,
+                });
+                titles.push({
+                    textAlign: 'center',
+                    text: serie.name,
+                    textStyle: {
+                        fontSize: 8,
+                        fontWeight: 'normal'
+                    }
+                });
+                count++;
+            });
+
+            var rowNumber = Math.ceil(Math.sqrt(count));
+            echarts.util.each(grids, function (grid, idx) {
+                grid.left = ((idx % rowNumber) / rowNumber * 100 + 0.5) + '%';
+                grid.top = (Math.floor(idx / rowNumber) / rowNumber * 100 + 0.5) + '%';
+                grid.width = (1 / rowNumber * 100 - 1) + '%';
+                grid.height = (1 / rowNumber * 100 - 1) + '%';
+
+                titles[idx].left = parseFloat(grid.left) + parseFloat(grid.width) / 2 + '%';
+                titles[idx].top = parseFloat(grid.top) + '%';
+            });
+
+            variablesChart.setOption({
+                title: titles,
+                grid: grids,
+                xAxis: xAxes,
+                yAxis: yAxes,
+                series: series
+            });
         })
 
         $.get('model.gexf', function (xml) {
@@ -173,7 +283,7 @@
 
             dependenciesChart.setOption({
                 title: {
-                    text: 'World3 - Dependencies'
+                    // text: 'World3 - Dependencies'
                 },
                 tooltip: {},
                 legend: [{
@@ -223,6 +333,7 @@
 
         window.onresize = function () {
             dependenciesChart.resize()
+            variablesChart.resize()
             resultsChart.resize()
         }
 
